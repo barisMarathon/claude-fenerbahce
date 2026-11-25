@@ -2,5 +2,5 @@
   "name": "sari-lacivert",
   "version": "0.1.0",
   "description": "Navy and yellow Claude desktop theme: your crest in the backdrop, five stars that fill with the context window, a live match card, and your march while Claude answers.",
-  "network": { "hosts": ["site.api.espn.com", "www.thesportsdb.com"] }
+  "network": { "hosts": ["site.api.espn.com", "www.thesportsdb.com", "upload.wikimedia.org"] }
 }

@@ -65,6 +65,20 @@ const loadCrest = async ($: EngineInterface): Promise<Crest | undefined> => {
   return parsed
 }
 
+// No local crest: fetch Wikipedia's file at run time and keep a copy in assets/
+// (git-ignored), so the repository never ships it and later starts need no network.
+const CREST_URL = 'https://upload.wikimedia.org/wikipedia/en/3/39/Fenerbah%C3%A7e.svg'
+
+const fetchCrest = async ($: EngineInterface): Promise<Crest | undefined> => {
+  const response = await $.http.fetch(CREST_URL, { headers: FETCH_HEADERS })
+  if (!response.ok) return undefined
+  const parsed = parseCrest(response.text)
+  if (parsed !== undefined) {
+    await $.fs.write(`${$.plugin.root}/assets/crest.svg`, response.text).catch(() => undefined)
+  }
+  return parsed
+}
+
 // Context fill, 0 to 100; undefined until the first reading, so the crest draws at once
 // and the stars join it when the figure arrives.
 let fill: number | undefined
@@ -234,6 +248,17 @@ export const register: Register = on => {
       crest = await loadCrest($)
     } catch {
       crest = undefined
+    }
+    if (crest === undefined) {
+      // First start without a local file: the theme draws now, the crest joins it.
+      void fetchCrest($)
+        .then(fetched => {
+          if (fetched !== undefined && crest === undefined) {
+            crest = fetched
+            $.ui.invalidate('ui.render')
+          }
+        })
+        .catch(() => undefined)
     }
     const set = await $.theme.set(LOOK)
     if (!set.isDrawn) {
