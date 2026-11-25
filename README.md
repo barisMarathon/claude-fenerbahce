@@ -12,7 +12,7 @@ Claude masaüstü uygulaması için sarı-lacivert bir tema modu.
 ## Kurulum
 
 1. Repoyu klonla.
-2. `assets/` klasörüne kendi `crest.svg` ve `mars.mp3` dosyalarını koy (isteğe bağlı, bkz. [assets/README.md](assets/README.md)).
+2. `assets/` klasörüne `crest.svg` ve `mars.mp3` dosyalarını koy (isteğe bağlı). Arma [Wikipedia'dan](https://en.wikipedia.org/wiki/File:Fenerbah%C3%A7e.svg) indirilip olduğu gibi kullanılabilir; marş için kendi kaydını kullan. Ayrıntılar: [assets/README.md](assets/README.md).
 3. `~/.claude/settings.json` dosyasına klasörün yolunu ekle:
    ```json
    "env": { "CLAUDE_CODE_PLUGIN_DIRS": "C:\\yol\\claude-fenerbahce" }
@@ -25,4 +25,4 @@ Fenerbahçe Spor Kulübü ile bir bağlantısı yoktur. Arma ve marş repoda yer
 
 ---
 
-**English:** A navy-and-yellow theme mod for the Claude desktop app. It shows your crest in the backdrop, five stars that fill as the context window fills, a live Fenerbahçe match card (ESPN, TheSportsDB), and plays your `assets/mars.mp3` while Claude is answering (`/mars` toggles it). Add the folder to `CLAUDE_CODE_PLUGIN_DIRS` in `~/.claude/settings.json` and restart. Not affiliated with Fenerbahçe SK; no crest or audio is included.
+**English:** A navy-and-yellow theme mod for the Claude desktop app. It shows your crest in the backdrop, five stars that fill as the context window fills, a live Fenerbahçe match card (ESPN, TheSportsDB), and plays your `assets/mars.mp3` while Claude is answering (`/mars` toggles it). Add the folder to `CLAUDE_CODE_PLUGIN_DIRS` in `~/.claude/settings.json` and restart. Not affiliated with Fenerbahçe SK; no crest or audio is included. Get the crest from [Wikipedia](https://en.wikipedia.org/wiki/File:Fenerbah%C3%A7e.svg) and use your own march recording (see [assets/README.md](assets/README.md)).
