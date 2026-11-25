@@ -1,0 +1,6 @@
+# Your own crest and march: personal files, never committed.
+assets/*
+!assets/README.md
+
+# Written by Claude Code when the mod loads.
+.claude-plugin/types/
