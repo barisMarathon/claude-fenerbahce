@@ -30,7 +30,7 @@ const { theme, problems } = makeColors({
 const LOOK: ThemeSetArgs = {
   colors: theme,
   overrideColorScheme: 'dark',
-  backdrop: { scene: SCENE, glass: { blur: 6, tint: '#0a1226', opacity: 0.6 } },
+  backdrop: { scene: SCENE, glass: { blur: 3, tint: '#0a1226', opacity: 0.6 } },
 }
 
 // The crest is the user's own vector file, assets/crest.svg, kept out of git.
