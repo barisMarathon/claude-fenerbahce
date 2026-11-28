@@ -220,7 +220,8 @@ const esc = (text: string) =>
 
 const short = (text: string, max: number) => (text.length > max ? `${text.slice(0, max - 1)}…` : text)
 
-const FONT = 'Segoe UI, Roboto, Helvetica, Arial, sans-serif'
+// Windows, macOS, then the usual Linux desktop fonts before the generic fallback.
+const FONT = 'Segoe UI, -apple-system, Roboto, Ubuntu, Noto Sans, Cantarell, DejaVu Sans, Helvetica, Arial, sans-serif'
 
 const textOn = (hex: string) => {
   const n = parseInt(hex, 16)
