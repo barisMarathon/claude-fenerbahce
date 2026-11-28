@@ -30,7 +30,7 @@ const { theme, problems } = makeColors({
 const LOOK: ThemeSetArgs = {
   colors: theme,
   overrideColorScheme: 'dark',
-  backdrop: { scene: SCENE, glass: { blur: 0, tint: '#0a1226', opacity: 0.6 } },
+  backdrop: { scene: SCENE, glass: { blur: 3, tint: '#0a1226', opacity: 0.6 } },
 }
 
 // The crest is the user's own vector file, assets/crest.svg, kept out of git.
@@ -119,8 +119,10 @@ const scene = (percent: number | undefined, match: MatchView | undefined) => `<s
 .beam2 { animation-delay: -7s; }
 .halo { animation: halo 6s ease-in-out infinite; opacity: 0.55; }
 .twinkle { animation: twinkle 3.5s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 50%; }
-.crest { transform: translate(900px, 150px) scale(1); }
-@media (max-aspect-ratio: 3/2) { .crest { transform: translate(780px, 170px) scale(0.92); } }
+/* The crest and its stars sit right of the chat column, against the right edge. */
+.crest { transform: translate(1120px, 210px) scale(0.78); }
+@media (max-aspect-ratio: 8/5) { .crest { transform: translate(1060px, 220px) scale(0.74); } }
+@media (max-aspect-ratio: 3/2) { .crest { transform: translate(1010px, 230px) scale(0.7); } }
 @media (max-aspect-ratio: 1/1) { .crest { transform: translate(590px, 110px) scale(0.7); } }
 /* The chat column sits in the middle, about 700 points wide: the card stays left of it. */
 .match { transform: translate(20px, 400px) scale(0.78); }
