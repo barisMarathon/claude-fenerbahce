@@ -191,6 +191,36 @@ const PLAYER_PS = [
   '}',
 ].join('\n')
 
+// What the Linux player writes when neither ffplay nor mpv is installed.
+const NO_PLAYER = 'sari-lacivert: no ffplay or mpv found'
+
+// Linux has no player the engine can use, so the march goes to ffplay (part of
+// ffmpeg) or mpv, whichever is installed. The shell becomes the player through
+// `exec`, so stopping the child stops the sound. A small watchdog beside it
+// prints a dot every half second, so a stop is seen within that, and ends the
+// player once the Claude process (OWNER_PID) or the pipe to it is gone.
+const PLAYER_SH = [
+  'if command -v ffplay >/dev/null 2>&1; then',
+  '  set -- ffplay -nodisp -loop 0 -volume 50 -loglevel quiet "$MARS_PATH"',
+  'elif command -v mpv >/dev/null 2>&1; then',
+  '  set -- mpv --no-video --loop-file=inf --volume=50 --really-quiet "$MARS_PATH"',
+  'else',
+  `  echo '${NO_PLAYER}' >&2`,
+  '  exit 127',
+  'fi',
+  'me=$$',
+  '(',
+  "  trap '' PIPE",
+  '  while kill -0 "$me" 2>/dev/null; do',
+  '    if [ -n "$OWNER_PID" ] && ! kill -0 "$OWNER_PID" 2>/dev/null; then break; fi',
+  '    echo . || break',
+  '    sleep 0.5',
+  '  done',
+  '  kill "$me" 2>/dev/null',
+  ') 2>/dev/null &',
+  'exec "$@"',
+].join('\n')
+
 // One player at a time. `done` settles once its process has really ended, so the
 // next turn waits for it and two marches never overlap.
 type Player = { stop: () => void; isStopping: boolean; done: Promise<void> }
@@ -200,7 +230,7 @@ let player: Player | undefined
 let isMuted = false
 
 // Asked once, then reused every turn.
-type Host = { isWindows: boolean; env: Record<string, string> }
+type Host = { sysname: string; env: Record<string, string> }
 let host: Promise<Host> | undefined
 
 let hasWarned = false
@@ -321,28 +351,55 @@ export const register: Register = on => {
         await previous
         if (own.isStopping) return
         host ??= Promise.all([$.session.machine(), $.process.hookEnv()]).then(([machine, env]) => ({
-          isWindows: machine.sysname === 'Windows_NT',
+          sysname: machine.sysname,
           env,
         }))
-        const { isWindows, env } = await host
+        const { sysname, env } = await host
         if (own.isStopping) return
 
         // The march is the user's own file, assets/mars.mp3; without it nothing plays.
         if (!(await $.fs.exists(`${$.plugin.root}/assets/mars.mp3`)) || own.isStopping) return
 
-        if (isWindows) {
+        // Windows and Linux: a player process of our own, which prints a dot every
+        // half second, so a stop is seen within that.
+        const argv =
+          sysname === 'Windows_NT'
+            ? ['powershell.exe', '-NoProfile', '-NonInteractive', '-Command', PLAYER_PS]
+            : sysname === 'Linux'
+              ? ['/bin/sh', '-c', PLAYER_SH]
+              : undefined
+        if (argv !== undefined) {
+          const separator = sysname === 'Windows_NT' ? '\\' : '/'
           const child = $.process.spawn({
-            argv: ['powershell.exe', '-NoProfile', '-NonInteractive', '-Command', PLAYER_PS],
-            env: { MARS_PATH: `${env.CLAUDE_PLUGIN_ROOT}\\assets\\mars.mp3`, OWNER_PID: env.CLAUDE_PID ?? '' },
+            argv,
+            env: {
+              MARS_PATH: [env.CLAUDE_PLUGIN_ROOT, 'assets', 'mars.mp3'].join(separator),
+              OWNER_PID: env.CLAUDE_PID ?? '',
+            },
           })
           stopNow = () => {
             void child.return(undefined as never).catch(() => undefined)
           }
-          // The player prints a dot every half second, so a stop is seen within that.
-          for await (const _piece of child) {
-            if (own.isStopping) break
+          let errors = ''
+          let isLeft = false
+          for await (const piece of child) {
+            if (own.isStopping) {
+              isLeft = true
+              break
+            }
+            if (piece.stream === 'stderr') errors += piece.text
+          }
+          // The player ended by itself: a missing player or a file it can't open.
+          if (!isLeft && !own.isStopping) {
+            const { code } = await child.result
+            if (errors.includes(NO_PLAYER) && !hasWarned) {
+              hasWarned = true
+              $.ui.toast("Marş için ffplay (ffmpeg paketi) ya da mpv kurulu olmalı: örneğin 'sudo apt install ffmpeg'.")
+            }
+            if (code !== 0 && code !== null) throw new Error(errors.trim() || `player exited with code ${code}`)
           }
         } else {
+          // macOS: the engine plays it itself (afplay).
           const controller = new AbortController()
           stopNow = () => controller.abort()
           await $.audio.play({ asset: 'assets/mars.mp3' }, { shouldLoop: true, gain: 0.6, signal: controller.signal })
